@@ -7,6 +7,7 @@ function [W, MSE_values] = TrainClassifier(num_classes, num_features, max_num_it
     % converged value
     MSE_values = zeros(max_num_iterations, 1);
 
+    % Create W = [W~ w_0]
     W = [zeros(num_classes, num_features) zeros(num_classes, 1)];
     
     iteration = 0;
@@ -25,6 +26,8 @@ function [W, MSE_values] = TrainClassifier(num_classes, num_features, max_num_it
 
             for k = 1:num_training_samples
                 x_k = [data(k, :, c) 1]'; 
+
+                % z_k = W~ * x_k + w_0 = [W~ w_0] * [x_k' 1]'
                 z_k = W * x_k;
 
                 % Sigmoid function

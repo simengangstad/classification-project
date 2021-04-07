@@ -11,9 +11,6 @@ data(:, :, 2) = versicolor_data;
 data(:, :, 3) = virginica_data;
 
 %% Setup & training
-% Create W = [W~ w_0]
-% z_k = W~ * x_k + w_0 = [W~ w_0] * [x_k' 1]'
-% 
 % Since number of features is 4, x_k = 4 x 1
 %  
 % W~    = number of classes x number of features    = 3 x 4
