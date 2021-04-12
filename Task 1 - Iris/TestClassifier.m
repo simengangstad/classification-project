@@ -1,4 +1,4 @@
-function confusion_matrix = TestClassifier(num_classes, W, data)
+function [confusion_matrix, error_rate] = TestClassifier(num_classes, W, data)
 
     confusion_matrix = zeros(num_classes, num_classes);
     
@@ -16,5 +16,7 @@ function confusion_matrix = TestClassifier(num_classes, W, data)
             confusion_matrix(c, max_index) = confusion_matrix(c, max_index) + 1;
         end 
     end
+
+    error_rate = (sum(confusion_matrix, 'all') - sum(diag(confusion_matrix))) / sum(confusion_matrix, 'all'); 
 end
 
