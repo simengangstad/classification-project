@@ -1,0 +1,74 @@
+%% Setup data
+data = load('Dataset/data.mat');
+
+training_labels = data.trainlab;
+training_data = data.trainv;
+
+test_labels = data.testlab;
+test_data = data.testv;
+
+
+%% Iterative construction of distance matrix in chunks and confusion matrix
+
+confusion_matrix = zeros(10, 10);
+
+chunk_training_size = 6000;
+chunk_test_size = 1000;
+
+classified_images = [];
+misclassified_images = [];
+
+%Loop from 1 to 10
+for chunk_index = 1:size(training_labels, 1) / chunk_training_size 
+
+    chunk_training_start = (chunk_index - 1) * chunk_training_size + 1;
+    
+    chunk_training_data     = training_data(chunk_training_start:chunk_training_start + chunk_training_size - 1, :);
+    chunk_training_labels   = training_labels(chunk_training_start:chunk_training_start + chunk_training_size - 1, :);
+    
+    
+    chunk_test_start = (chunk_index - 1) * chunk_test_size + 1;
+    
+    chunk_test_data         = test_data(chunk_test_start:chunk_test_start + chunk_test_size - 1, :);
+    chunk_test_labels       = test_labels(chunk_test_start: chunk_test_start + chunk_test_size - 1, :);
+    
+    distance_matrix = dist(chunk_test_data, chunk_training_data');
+    
+    [~, min_indices] = min(distance_matrix');
+    
+    % Chunk_size: is the size of the current chunk
+    % i : the iteration of the distance matrix
+    
+    %Loop from 1 to 1000
+    for i = 1:chunk_test_size
+        min_index = min_indices(1, i);
+
+        % Make 1 indexed for confusion matrix
+        correct_label = chunk_test_labels(i) + 1; 
+        classified_label = chunk_training_labels(min_index) + 1;
+        
+        current_training_index = (chunk_index-1)*chunk_test_size+i
+
+        if (correct_label ~= classified_label) 
+            misclassified_images = append(misclassified_images,current_training_index)
+        else 
+            classified_images = append(classified_images,current_training_index)
+        end 
+
+        confusion_matrix(correct_label, classified_label) = confusion_matrix(correct_label, classified_label) + 1;
+    end
+    
+    fprintf('Chunk iteration %d/%d\n', chunk_index, size(training_labels, 1) / chunk_training_size);
+end
+
+%Compute Error rate
+sum_without_diagonal = (sum(confusion_matrix, 'all') - sum(diag(confusion_matrix)));
+error_rate = sum_without_diagonal / sum(confusion_matrix, 'all')
+
+disp(confusion_matrix);
+
+function plot_image_vec(number) 
+    x = zeros(28,28); 
+    x(:) = training_data(number,:); 
+    image(x);
+end
