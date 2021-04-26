@@ -18,6 +18,7 @@ chunk_test_size = 1000;
 classification_table = zeros(size(test_data, 1), 2);
 
 % Loop through the chunks 
+tic;
 for chunk_index = 1:size(training_labels, 1) / chunk_training_size 
 
     chunk_training_start = (chunk_index - 1) * chunk_training_size + 1;
@@ -54,6 +55,7 @@ for chunk_index = 1:size(training_labels, 1) / chunk_training_size
     
     fprintf('Chunk iteration %d/%d\n', chunk_index, size(training_labels, 1) / chunk_training_size);
 end
+toc;
 
 %% Print error rate and confusion matrix
 
