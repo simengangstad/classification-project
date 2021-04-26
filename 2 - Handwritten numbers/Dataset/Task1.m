@@ -14,11 +14,8 @@ confusion_matrix = zeros(10, 10);
 chunk_training_size = 6000;
 chunk_test_size = 1000;
 
-classified_images = [];
-misclassified_images = [];
-
-% Array holding the corresponding class to missclassified test. 
-misclassified_labels = []; 
+% Holds the correct labels and classified labels for all test images.
+classification_table = zeros(size(test_data, 1), 2);
 
 % Loop through the chunks 
 for chunk_index = 1:size(training_labels, 1) / chunk_training_size 
@@ -50,14 +47,8 @@ for chunk_index = 1:size(training_labels, 1) / chunk_training_size
         classified_label = chunk_training_labels(min_index) + 1;
         
         current_training_index = (chunk_index - 1) * chunk_test_size + i;
-
-        if (correct_label ~= classified_label) 
-            misclassified_images = [misclassified_images current_training_index];
-            misclassified_labels = [misclassified_labels classified_label-1];
-        else 
-            classified_images = [classified_images current_training_index];
-        end 
-
+        classification_table(current_training_index, :) = [correct_label - 1 classified_label - 1];
+        
         confusion_matrix(correct_label, classified_label) = confusion_matrix(correct_label, classified_label) + 1;
     end
     
@@ -69,47 +60,63 @@ end
 % Compute class error rate
 for class_index = 1:size(confusion_matrix, 1)
     total_test_samples = sum(confusion_matrix(class_index, :));
-    error_rate = 1 - confusion_matrix(class_index, class_index) / total_test_samples;
-    fprintf('Error rate for number %d is %.2f. Total test samples: %d\n', (class_index - 1), error_rate * 100, total_test_samples);
+    error_rate = 100 * (1 - confusion_matrix(class_index, class_index) / total_test_samples);
+    fprintf("Error rate for number %d is %.2f. Total test samples: %d\n", (class_index - 1), error_rate, total_test_samples);
 end
 
 % Compute total error rate
 sum_without_diagonal = (sum(confusion_matrix, 'all') - sum(diag(confusion_matrix)));
-error_rate = sum_without_diagonal / sum(confusion_matrix, 'all');
-fprintf('Total error rate: %d\n', error_rate);
+error_rate = 100 * sum_without_diagonal / sum(confusion_matrix, 'all');
+fprintf("Total error rate: %.2f\n", error_rate);
 
 disp('Confusion matrix');
 disp(confusion_matrix);
 
 
+%% Build indices of misclassified and correctly classified images
+
+misclassified_images = [];
+correctly_classified_images = [];
+
+for i = 1:size(classification_table, 1)
+    
+    correct_label = classification_table(i, 1);
+    classified_label = classification_table(i, 2);
+    
+    if correct_label ~= classified_label
+        misclassified_images = [misclassified_images i];
+    else
+        correctly_classified_images = [correctly_classified_images i];
+    end
+end
+
 %% Plot classified and missclassified pictures
-tiledlayout(3, 2);
+close;
 
-nexttile;
-plot_image_vec(classified_images(1)',test_data,test_labels,misclassified_labels(1),1);
-nexttile;
-plot_image_vec(misclassified_images(1)',test_data,test_labels,misclassified_labels(1),0);
+rows = 3;
+tiledlayout(rows, 2);
 
-nexttile;
-plot_image_vec(classified_images(2)',test_data,test_labels,misclassified_labels(2),1);
-nexttile;
-plot_image_vec(misclassified_images(2)',test_data,test_labels,misclassified_labels(2),0);
+for row = 1:rows
+    index = randi([1 size(correctly_classified_images, 2)], 1, 1);
+    nexttile;
+    plot_image(correctly_classified_images(1, index), test_data, classification_table);
 
-nexttile;
-plot_image_vec(classified_images(3)',test_data,test_labels,misclassified_labels(3),1);
-nexttile;
-plot_image_vec(misclassified_images(3)',test_data,test_labels,misclassified_labels(3),0);
+    index = randi([1 size(misclassified_images, 2)], 1, 1);
+    nexttile;
+    plot_image(misclassified_images(1, index), test_data, classification_table);
+end
 
-function plot_image_vec(index, test_data, test_label, classify_num, classified) 
-    x = zeros(28,28); 
-    x(:) = test_data(index,:); 
+function plot_image(index, data, classification_table) 
+    x = zeros(28, 28); 
+    x(:) = data(index, :); 
     image(x');
     
-    correct_label = test_label(index);
+    correct_label = classification_table(index, 1);
+    classified_label = classification_table(index, 2);
 
-    if classified
+    if correct_label == classified_label
         title(sprintf('Classified correctly, label: %d', correct_label));
     else 
-        title(sprintf('Misclassified, correct label: %d, classified label: %d', correct_label, classify_num));
+        title(sprintf('Misclassified, correct label: %d, classified label: %d', correct_label, classified_label));
     end
 end
