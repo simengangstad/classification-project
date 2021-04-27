@@ -40,7 +40,7 @@ end
 distance_matrix = dist(test_data, cluster_data');
 
 % Find the entries with the lowest distance
-[~, min_indices] = mink(distance_matrix', K, 1);
+[min_values, min_indices] = mink(distance_matrix', K, 1);
 
 for i = 1:size(test_data, 1)
     min_index = min_indices(:, i);
@@ -48,13 +48,34 @@ for i = 1:size(test_data, 1)
     classified_labels = [];
 
     for j = 1:size(min_index, 1)
-        % TODO: Check if they are equal and choose the class with shortest 
-        % distance
         classified_labels = [classified_labels, floor((min_index(j) - 1) / 64) + 1];
     end
-    
-    classified_label = mode(classified_labels);
 
+    % If there are equal amount of some classes in the neighour, we need to 
+    % differentiate between them using the distance
+    unique_classes = unique(classified_labels);
+    bins = histc(classified_labels, unique_classes);
+    modes = unique_classes(bins == max(bins));
+
+    min_distance = -1;
+    classified_label = -1;
+
+    for j = 1:size(modes, 2)
+        class = modes(1, j);
+        distance = 0;
+
+        for index = 1:size(min_index, 2)
+           if class == floor((min_index(index) - 1) / 64)
+            distance = distance + min_values(index);
+           end
+        end
+
+        if distance < min_distance || min_distance == -1
+            min_distance = distance;
+            classified_label = class;
+        end
+    end
+    
     % Make 1 indexed for confusion matrix
     correct_label = test_labels(i) + 1;
 
