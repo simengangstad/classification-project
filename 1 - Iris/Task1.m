@@ -31,6 +31,8 @@ parameters.max_num_iterations = 20000;      % If tolerance is not met, the
                                             
 parameters.plot = true;
 
+parameters.test_set = false;
+
 
 %% Using 30 samples for training and 20 for testing
 num_training_samples = 30;

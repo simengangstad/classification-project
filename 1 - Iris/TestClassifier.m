@@ -9,7 +9,7 @@ function [confusion_matrix, error_rate] = TestClassifier(num_classes,...
     % W:                                The matrix consisting of the 
     %                                   weights and biases from the
     %                                   training
-    % data:                             The test data
+    % data:                             Data tested on classifier
     %
     %
     % Returns:
